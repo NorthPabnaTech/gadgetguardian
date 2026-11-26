@@ -142,6 +142,7 @@ export type ProductsQuery = {
   maxPrice?: number;
   availability?: 'in_stock';
   onSale?: boolean;
+  featured?: boolean;
   sort?: string;
   page?: number;
   pageSize?: number;
@@ -159,6 +160,7 @@ export async function getProducts(query: ProductsQuery = {}): Promise<Paginated<
   if (query.maxPrice !== undefined) sp.set('maxPrice', String(query.maxPrice));
   if (query.availability) sp.set('availability', query.availability);
   if (query.onSale) sp.set('onSale', '1');
+  if (query.featured) sp.set('featured', '1');
   if (query.sort) sp.set('sort', query.sort);
   if (query.page) sp.set('page', String(query.page));
   if (query.pageSize) sp.set('pageSize', String(query.pageSize));
