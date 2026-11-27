@@ -20,7 +20,7 @@ export const dynamic = 'force-dynamic';
 export default async function HomePage() {
   const [bootstrap, featuredRes, freshRes, dealsRes, combosRes, popularRes] = await Promise.all([
     getBootstrapData(),
-    getProducts({ featured: true, pageSize: 6 }),
+    getProducts({ featured: true, pageSize: 10 }),
     getProducts({ sort: 'newest', pageSize: 10 }),
     getProducts({ onSale: true, pageSize: 10 }),
     getCombos(1),
@@ -48,7 +48,6 @@ export default async function HomePage() {
         icon="sparkles"
         href="/products"
         products={featured}
-        gridClassName="xl:[&>*:nth-child(n+6)]:hidden"
         priority
       />
       <ProductSection
