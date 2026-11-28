@@ -83,6 +83,11 @@ export function CheckoutForm({ user, addresses, fees, className }: Props) {
     },
   });
   const zone = useWatch({ control: form.control, name: 'zone' }) as ShippingZone | undefined;
+  const [division, city] = useWatch({ control: form.control, name: ['division', 'city'] }) as [
+    string | undefined,
+    string | undefined,
+  ];
+  const locationSelected = Boolean(division && city);
   const paymentMethod = useWatch({ control: form.control, name: 'paymentMethod' }) ?? 'cod';
   const clearCouponAction = React.useCallback(() => setCouponAction(null), []);
   const { quote, loading } = useCartQuote(
@@ -220,20 +225,20 @@ export function CheckoutForm({ user, addresses, fees, className }: Props) {
               autoComplete="tel"
             />
             <FormInput
+              name="email"
+              label="Email (optional)"
+              type="email"
+              placeholder="you@example.com"
+              autoComplete="email"
+            />
+            <LocationFields />
+            <FormInput
               name="addressLine"
               label="Address"
               required
               placeholder="House, road, block / village"
               autoComplete="street-address"
               className="sm:col-span-2"
-            />
-            <LocationFields />
-            <FormInput
-              name="email"
-              label="Email (optional)"
-              type="email"
-              placeholder="you@example.com"
-              autoComplete="email"
             />
           </div>
           {user && addressId === 'new' && (
@@ -250,8 +255,8 @@ export function CheckoutForm({ user, addresses, fees, className }: Props) {
                 {SHIPPING_ZONES.map((z) => (
                   <AddressChoice
                     key={z}
-                    active={field.value === z}
-                    disabled={field.value !== z}
+                    active={locationSelected && field.value === z}
+                    disabled={!locationSelected || field.value !== z}
                     role="radio"
                   >
                     <div className="flex items-center justify-between">
@@ -316,8 +321,21 @@ export function CheckoutForm({ user, addresses, fees, className }: Props) {
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="text-ink line-clamp-2 text-[13px] font-semibold">{item.name}</p>
+                  <p className="text-muted mt-0.5 text-xs">
+                    <Taka amount={line?.unitPrice ?? item.price} /> × {item.quantity}
+                  </p>
                   {Object.keys(item.variant).length > 0 && (
-                    <p className="text-muted text-xs">{Object.values(item.variant).join(' · ')}</p>
+                    <div className="mt-1.5 flex flex-wrap gap-1.5">
+                      {Object.entries(item.variant).map(([key, value]) => (
+                        <span
+                          key={key}
+                          className="bg-surface text-muted inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px]"
+                        >
+                          <span>{key}:</span>
+                          <span className="text-ink font-medium">{value}</span>
+                        </span>
+                      ))}
+                    </div>
                   )}
                   {line && (
                     <LineOptions
@@ -428,6 +446,7 @@ export function CheckoutForm({ user, addresses, fees, className }: Props) {
             <dt className="text-muted">Delivery</dt>
             <dd className="text-ink font-medium">
               {(() => {
+                if (!locationSelected) return '-';
                 const baseFee = fees[zone ?? 'outside_dhaka'];
                 if (!quote) return '—';
                 const discounted = quote.shippingFee < baseFee;
@@ -454,7 +473,13 @@ export function CheckoutForm({ user, addresses, fees, className }: Props) {
               {paymentMethod === 'paymently' ? 'Total (pay online)' : 'Total (pay on delivery)'}
             </dt>
             <dd className="text-ink text-xl font-bold">
-              {quote ? <Taka amount={quote.total} /> : '—'}
+              {quote ? (
+                <Taka
+                  amount={locationSelected ? quote.total : Math.max(0, quote.total - quote.shippingFee)}
+                />
+              ) : (
+                '—'
+              )}
             </dd>
           </div>
         </dl>

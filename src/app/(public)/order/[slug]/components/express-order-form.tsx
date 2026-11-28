@@ -96,6 +96,11 @@ export function ExpressOrderForm({ product, user, addresses, fees }: Props) {
   });
 
   const zone = useWatch({ control: form.control, name: 'zone' }) as ShippingZone | undefined;
+  const [division, city] = useWatch({ control: form.control, name: ['division', 'city'] }) as [
+    string | undefined,
+    string | undefined,
+  ];
+  const locationSelected = Boolean(division && city);
   const paymentMethod = useWatch({ control: form.control, name: 'paymentMethod' }) ?? 'cod';
   const clearCouponAction = React.useCallback(() => setCouponAction(null), []);
 
@@ -424,6 +429,7 @@ export function ExpressOrderForm({ product, user, addresses, fees }: Props) {
               <dt className="text-muted">Delivery</dt>
               <dd className="text-ink font-medium">
                 {(() => {
+                  if (!locationSelected) return '-';
                   const baseFee = fees[zone ?? 'outside_dhaka'];
                   if (!quote) return <Taka amount={baseFee} />;
                   const discounted = quote.shippingFee < baseFee;
@@ -451,9 +457,18 @@ export function ExpressOrderForm({ product, user, addresses, fees }: Props) {
               </dt>
               <dd className="text-ink text-xl font-bold">
                 {quote ? (
-                  <Taka amount={quote.total} />
+                  <Taka
+                    amount={
+                      locationSelected ? quote.total : Math.max(0, quote.total - quote.shippingFee)
+                    }
+                  />
                 ) : (
-                  <Taka amount={product.effectivePrice * qty + fees[zone ?? 'inside_dhaka']} />
+                  <Taka
+                    amount={
+                      product.effectivePrice * qty +
+                      (locationSelected ? fees[zone ?? 'inside_dhaka'] : 0)
+                    }
+                  />
                 )}
               </dd>
             </div>

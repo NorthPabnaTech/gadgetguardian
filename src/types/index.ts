@@ -413,7 +413,7 @@ export type CartQuoteLine = {
   image?: ImageDTO;
   variant: Record<string, string>;
   /** The product's options, so a line added without them can be completed in the cart. */
-  options: { name: string; values: string[] }[];
+  options: { name: string; values: string[]; disabledValues?: string[] }[];
   quantity: number;
   unitPrice: number;
   lineTotal: number;
